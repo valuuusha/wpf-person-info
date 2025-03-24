@@ -17,7 +17,6 @@ namespace WpfPersonInfo
         public MainWindow()
         {
             InitializeComponent();
-            DataContext = new UserViewModel();
         }
     }
 }

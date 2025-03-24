@@ -12,7 +12,7 @@ namespace WpfPersonInfo.ViewModel
     public class UserViewModel : INotifyPropertyChanged
     {
         private UserModel _userModel;
-        private DateTime _birthDate;
+        private DateTime _birthDate = DateTime.Today;
         private string _age;
         private string _westernZodiac;
         private string _chineseZodiac;
@@ -28,14 +28,13 @@ namespace WpfPersonInfo.ViewModel
                 _userModel.BirthDate = value;
                 OnPropertyChanged(nameof(BirthDate));
                 CalculateAge();
-                CheckForBirthday();
             }
         }
 
         public string TbAge
         {
             get => _age;
-            set
+            private set
             {
                 _age = value;
                 OnPropertyChanged(nameof(TbAge));
@@ -45,7 +44,7 @@ namespace WpfPersonInfo.ViewModel
         public string TbWesternZodiac
         {
             get => _westernZodiac;
-            set
+            private set
             {
                 _westernZodiac = value;
                 OnPropertyChanged(nameof(TbWesternZodiac));
@@ -55,7 +54,7 @@ namespace WpfPersonInfo.ViewModel
         public string TbChineseZodiac
         {
             get => _chineseZodiac;
-            set
+            private set
             {
                 _chineseZodiac = value;
                 OnPropertyChanged(nameof(TbChineseZodiac));
@@ -69,27 +68,23 @@ namespace WpfPersonInfo.ViewModel
             _chineseZodiac = string.Empty; 
         }
 
-            private void CalculateAge()
+        private void CalculateAge()
+        {
+            int age = _userModel.CalculateAge();
+            if (_userModel.IsValidAge(age))
             {
-                int age = _userModel.CalculateAge();
-                Console.WriteLine("CalculateAge called");
-                if (_userModel.IsValidAge(age))
-                {
                 TbAge = age.ToString();
                 TbWesternZodiac = _userModel.GetWesternZodiac();
                 TbChineseZodiac = _userModel.GetChineseZodiac();
+
+                if (_userModel.IsBirthdayToday())
+                {
+                    MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
+                }
             }
             else
             {
                 MessageBox.Show("Invalid age. Please enter a valid birth date.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-
-        private void CheckForBirthday()
-        {
-            if (_userModel.IsBirthdayToday())
-            {
-                MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
             }
         }
 
