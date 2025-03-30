@@ -1,35 +1,60 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace WpfPersonInfo.Model
 {
-    public class UserModel
+    public class Person
     {
-        public DateTime BirthDate { get; set; }
+        public string FirstName { get; }
+        public string LastName { get; }
+        public string Email { get; }
+        public DateTime BirthDate { get; }
 
-        public int CalculateAge()
+        private readonly bool _isAdult;
+        private readonly string _westernSign;
+        private readonly string _chineseSign;
+        private readonly bool _isBirthday;
+
+        public bool IsAdult => _isAdult;
+        public string WesternSign => _westernSign;
+        public string ChineseSign => _chineseSign;
+        public bool IsBirthday => _isBirthday;
+
+        public Person(string firstName, string lastName, string email, DateTime birthDate)
         {
-            var today = DateTime.Today;
-            var age = today.Year - BirthDate.Year;
-            if (BirthDate.Date > today.AddYears(-age)) age--;
-            return age;
+            FirstName = firstName;
+            LastName = lastName;
+            Email = email;
+            BirthDate = birthDate;
+
+            _isAdult = CalculateIsAdult();
+            _westernSign = CalculateWesternSign();
+            _chineseSign = CalculateChineseSign();
+            _isBirthday = CalculateIsBirthday();
         }
 
-        public bool IsValidAge(int age)
+        public Person(string firstName, string lastName, string email)
+            : this(firstName, lastName, email, DateTime.Today)
         {
-            return age >= 0 && age <= 135;
         }
 
-        public bool IsBirthdayToday()
+        public Person(string firstName, string lastName, DateTime birthDate)
+            : this(firstName, lastName, string.Empty, birthDate)
         {
-            var today = DateTime.Today;
-            return BirthDate.Month == today.Month && BirthDate.Day == today.Day;
         }
 
-        public string GetWesternZodiac()
+        private bool CalculateIsAdult()
+        {
+            var age = DateTime.Today.Year - BirthDate.Year;
+            if (BirthDate > DateTime.Today.AddYears(-age)) age--;
+            return age >= 18;
+        }
+
+        private bool CalculateIsBirthday()
+        {
+            return BirthDate.Month == DateTime.Today.Month && BirthDate.Day == DateTime.Today.Day;
+        }
+
+        private string CalculateWesternSign()
         {
             int month = BirthDate.Month;
             int day = BirthDate.Day;
@@ -61,8 +86,7 @@ namespace WpfPersonInfo.Model
 
             return "Unknown";
         }
-
-        public string GetChineseZodiac()
+        private string CalculateChineseSign()
         {
             int year = BirthDate.Year;
             string[] zodiacs = { "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig" };

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:WpfPersonInfo.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="300" Width="400">
+        Title="MainWindow" Height="400" Width="400">
 
     <Window.DataContext>
         <vm:UserViewModel/>
@@ -17,24 +17,54 @@
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto"/>
+            <ColumnDefinition Width="*"/>
             <ColumnDefinition Width="*"/>
         </Grid.ColumnDefinitions>
 
-        <DatePicker Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Margin="5" Text="First name" FontSize="12" Foreground="Gray"></TextBlock>
+        <TextBox Name="TbFirstName" Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" Margin="5"
+         Text="{Binding FirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Margin="5" Text="Last name" FontSize="12" Foreground="Gray"></TextBlock>
+        <TextBox Name="TbLastName" Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Margin="5"
+         Text="{Binding LastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="5" Text="Email" FontSize="12" Foreground="Gray"></TextBlock>
+        <TextBox Name="TbEmail" Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="5"
+         Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+
+        <TextBlock Grid.Row="4" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="5" Text="Birth date" FontSize="12" Foreground="Gray"></TextBlock>
+        <DatePicker Name="DpBirthDate" Grid.Row="5" Grid.ColumnSpan="2"
                     SelectedDate="{Binding BirthDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
                     VerticalAlignment="Top" Margin="5"/>
-
-        <TextBlock Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" Margin="5">Age:</TextBlock>
-        <TextBlock Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Margin="5" Text="{Binding TbAge, Mode=OneWay}"/>
-
-        <TextBlock Grid.Row="2" Grid.Column="0" VerticalAlignment="Top" Margin="5">Western zodiac:</TextBlock>
-        <TextBlock Grid.Row="2" Grid.Column="1" VerticalAlignment="Top" Margin="5" Text="{Binding TbWesternZodiac, Mode=OneWay}"/>
+        <Button Name="BProceed" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Height="25" Margin="5" Content="Proceed" Command="{Binding ProceedCommand}"></Button>
         
-        <TextBlock Grid.Row="3" Grid.Column="0" VerticalAlignment="Top" Margin="5">Chinese zodiac:</TextBlock>
-        <TextBlock Grid.Row="3" Grid.Column="1" VerticalAlignment="Top" Margin="5" Text="{Binding TbChineseZodiac, Mode=OneWay}"/>
+        <TextBlock Grid.Row="7" Grid.Column="0" Margin="5" Text="Age:"/>
+        <TextBlock Grid.Row="7" Grid.Column="1" Margin="5" Text="{Binding Age}"/>
+
+        <TextBlock Grid.Row="8" Grid.Column="0" Margin="5" Text="Adult:"/>
+        <TextBlock Grid.Row="8" Grid.Column="1" Margin="5" Text="{Binding IsAdult}"/>
+
+        <TextBlock Grid.Row="9" Grid.Column="0" Margin="5" Text="Western sign:"/>
+        <TextBlock Grid.Row="9" Grid.Column="1" Margin="5" Text="{Binding WesternSign}"/>
+
+        <TextBlock Grid.Row="10" Grid.Column="0" Margin="5" Text="Chinese sign:"/>
+        <TextBlock Grid.Row="10" Grid.Column="1" Margin="5" Text="{Binding ChineseSign}"/>
+
+        <TextBlock Grid.Row="11" Grid.Column="0" Margin="5" Text="Birthday today:"/>
+        <TextBlock Grid.Row="11" Grid.Column="1" Margin="5" Text="{Binding IsBirthday}"/>
+
     </Grid>
 </Window>
