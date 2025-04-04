@@ -21,7 +21,18 @@ namespace WpfPersonInfo.ViewModel
         private string _chineseSign;
         private string _isBirthday;
 
-        private bool _proceedEnabled;
+        private bool _proceedEnabled = true;
+        public bool ProceedEnabled
+        {
+            get => _proceedEnabled;
+            set
+            {
+                _proceedEnabled = value;
+                OnPropertyChanged();
+                UpdateCommandState(); 
+            }
+        }
+
 
         public DateTime BirthDate
         {
@@ -129,13 +140,6 @@ namespace WpfPersonInfo.ViewModel
             }
         }
 
-        private bool ProceedEnabled
-        {
-            get => _proceedEnabled;
-            set { _proceedEnabled = value; OnPropertyChanged(); UpdateCommandState(); }
-        }
-
-
         public ICommand ProceedCommand { get; }
 
         public UserViewModel()
@@ -152,37 +156,31 @@ namespace WpfPersonInfo.ViewModel
         }
         private async Task OnProceedAsync()
         {
-            ProceedEnabled = true;
+            ProceedEnabled = false;
 
             try
             {
-                var person = new Person(FirstName, LastName, Email, BirthDate);
-
+                await Task.Delay(1000);
                 await Task.Run(() =>
                 {
+                    var person = new Person(FirstName, LastName, Email, BirthDate);
                     int age = CalculateAge(BirthDate);
                     if (!IsValidAge(age))
                     {
-                        Application.Current.Dispatcher.Invoke(() =>
-                        {
-                            MessageBox.Show("Invalid birth date.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        });
+                        MessageBox.Show("Invalid birth date.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
-                    Application.Current.Dispatcher.Invoke(() =>
-                    {
-                        Age = age.ToString();
-                        IsAdult = person.IsAdult ? "Yes" : "No";
-                        WesternSign = person.WesternSign;
-                        ChineseSign = person.ChineseSign;
-                        IsBirthday = person.IsBirthday ? "Yes" : "No";
+                    Age = age.ToString();
+                    IsAdult = person.IsAdult ? "Yes" : "No";
+                    WesternSign = person.WesternSign;
+                    ChineseSign = person.ChineseSign;
+                    IsBirthday = person.IsBirthday ? "Yes" : "No";
 
-                        if (person.IsBirthday)
-                        {
-                            MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                    });
+                    if (person.IsBirthday)
+                    {
+                        MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
+                    }
                 });
 
             }
@@ -196,7 +194,7 @@ namespace WpfPersonInfo.ViewModel
             }
             finally
             {
-                ProceedEnabled = false;
+                ProceedEnabled = true;
             }
         }
 
