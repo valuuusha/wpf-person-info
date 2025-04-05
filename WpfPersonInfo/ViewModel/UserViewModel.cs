@@ -1,6 +1,8 @@
 ﻿using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
+using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using WpfPersonInfo.Command;
@@ -163,34 +165,26 @@ namespace WpfPersonInfo.ViewModel
                 await Task.Delay(1000);
                 await Task.Run(() =>
                 {
-                    var person = new Person(FirstName, LastName, Email, BirthDate);
-                    int age = CalculateAge(BirthDate);
-                    if (!IsValidAge(age))
+                    try
                     {
-                        MessageBox.Show("Invalid birth date.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        return;
+                        var person = new Person(FirstName, LastName, Email, BirthDate);
+
+                        Age = CalculateAge(BirthDate).ToString();
+                        IsAdult = person.IsAdult ? "Yes" : "No";
+                        WesternSign = person.WesternSign;
+                        ChineseSign = person.ChineseSign;
+                        IsBirthday = person.IsBirthday ? "Yes" : "No";
+
+                        if (person.IsBirthday)
+                        {
+                            MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
+                        }
                     }
-
-                    Age = age.ToString();
-                    IsAdult = person.IsAdult ? "Yes" : "No";
-                    WesternSign = person.WesternSign;
-                    ChineseSign = person.ChineseSign;
-                    IsBirthday = person.IsBirthday ? "Yes" : "No";
-
-                    if (person.IsBirthday)
+                    catch (Exception ex)
                     {
-                        MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
+                        MessageBox.Show(ex.Message, "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
                     }
                 });
-
-            }
-            catch (ArgumentException)
-            {
-                MessageBox.Show("Invalid birth date.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Unexpected error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -206,8 +200,6 @@ namespace WpfPersonInfo.ViewModel
             if (birthDate.Date > today.AddYears(-age)) age--;
             return age;
         }
-
-        private bool IsValidAge(int age) => age >= 0 && age <= 135;
 
         private void UpdateCommandState()
         {

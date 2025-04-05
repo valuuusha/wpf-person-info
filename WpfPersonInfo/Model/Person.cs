@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using WpfPersonInfo.ViewModel;
 
 namespace WpfPersonInfo.Model
 {
@@ -26,6 +29,8 @@ namespace WpfPersonInfo.Model
             Email = email;
             BirthDate = birthDate;
 
+            Validate();
+
             _isAdult = CalculateIsAdult();
             _westernSign = CalculateWesternSign();
             _chineseSign = CalculateChineseSign();
@@ -52,6 +57,23 @@ namespace WpfPersonInfo.Model
         private bool CalculateIsBirthday()
         {
             return BirthDate.Month == DateTime.Today.Month && BirthDate.Day == DateTime.Today.Day;
+        }
+        private void Validate()
+        {
+            if (!IsValidName(FirstName))
+                throw new ArgumentException("Invalid first name format (must be 2 to 50 characters).");
+
+            if (!IsValidName(LastName))
+                throw new ArgumentException("Invalid last name format(must be 2 to 50 characters).");
+
+            if (!IsValidEmail(Email))
+                throw new InvalidEmailException();
+
+            if (BirthDate > DateTime.Today)
+                throw new FutureBirthDateException();
+
+            if (BirthDate < DateTime.Today.AddYears(-135))
+                throw new TooOldBirthDateException();
         }
 
         private string CalculateWesternSign()
@@ -92,5 +114,34 @@ namespace WpfPersonInfo.Model
             string[] zodiacs = { "Rat", "Ox", "Tiger", "Rabbit", "Dragon", "Snake", "Horse", "Goat", "Monkey", "Rooster", "Dog", "Pig" };
             return zodiacs[(year - 4) % 12];
         }
+        private bool IsValidName(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return false;
+            if (name.Length < 2 || name.Length > 50) return false;
+
+            return Regex.IsMatch(name, @"^[\p{L}\-'’ ]+$");
+        }
+
+        public static bool IsValidEmail(string email)
+        {
+            return Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
+        }
+    }
+    public class FutureBirthDateException : Exception
+    {
+        public FutureBirthDateException()
+            : base("Birth date cannot be in the future.") { }
+    }
+
+    public class TooOldBirthDateException : Exception
+    {
+        public TooOldBirthDateException()
+            : base("Birth date is outside valid range for living persons.") { }
+    }
+
+    public class InvalidEmailException : Exception
+    {
+        public InvalidEmailException()
+            : base("Invalid email format") { }
     }
 }
