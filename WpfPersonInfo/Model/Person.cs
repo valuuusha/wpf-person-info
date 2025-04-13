@@ -1,27 +1,27 @@
 ﻿using System;
+using System.ComponentModel;
+using System.Runtime.CompilerServices;
+using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Xml.Linq;
-using WpfPersonInfo.ViewModel;
+using System.Xml.Serialization;
 
 namespace WpfPersonInfo.Model
 {
-    public class Person
+    [Serializable]
+    public class Person : INotifyPropertyChanged
     {
-        public string FirstName { get; }
-        public string LastName { get; }
-        public string Email { get; }
-        public DateTime BirthDate { get; }
+        private string _firstName;
+        private string _lastName;
+        private string _email;
+        private DateTime _birthDate;
+        private bool _isAdult;
+        private string _westernSign;
+        private string _chineseSign;
+        private bool _isBirthday;
 
-        private readonly bool _isAdult;
-        private readonly string _westernSign;
-        private readonly string _chineseSign;
-        private readonly bool _isBirthday;
+        public Person() { }
 
-        public bool IsAdult => _isAdult;
-        public string WesternSign => _westernSign;
-        public string ChineseSign => _chineseSign;
-        public bool IsBirthday => _isBirthday;
-
+        [JsonConstructor]
         public Person(string firstName, string lastName, string email, DateTime birthDate)
         {
             FirstName = firstName;
@@ -31,10 +31,7 @@ namespace WpfPersonInfo.Model
 
             Validate();
 
-            _isAdult = CalculateIsAdult();
-            _westernSign = CalculateWesternSign();
-            _chineseSign = CalculateChineseSign();
-            _isBirthday = CalculateIsBirthday();
+            CalculateProperties();
         }
 
         public Person(string firstName, string lastName, string email)
@@ -47,18 +44,117 @@ namespace WpfPersonInfo.Model
         {
         }
 
+        public string FirstName
+        {
+            get => _firstName;
+            set
+            {
+                _firstName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string LastName
+        {
+            get => _lastName;
+            set
+            {
+                _lastName = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Email
+        {
+            get => _email;
+            set
+            {
+                _email = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public DateTime BirthDate
+        {
+            get => _birthDate;
+            set
+            {
+                _birthDate = value;
+                OnPropertyChanged();
+                CalculateProperties();
+            }
+        }
+
+        public bool IsAdult
+        {
+            get => _isAdult;
+            private set
+            {
+                _isAdult = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string WesternSign
+        {
+            get => _westernSign;
+            private set
+            {
+                _westernSign = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string ChineseSign
+        {
+            get => _chineseSign;
+            private set
+            {
+                _chineseSign = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public bool IsBirthday
+        {
+            get => _isBirthday;
+            private set
+            {
+                _isBirthday = value;
+                OnPropertyChanged();
+            }
+        }
+
+        [JsonIgnore]
+        public int Age
+        {
+            get
+            {
+                var today = DateTime.Today;
+                int age = today.Year - BirthDate.Year;
+                if (BirthDate.Date > today.AddYears(-age)) age--;
+                return age;
+            }
+        }
+
+        private void CalculateProperties()
+        {
+            IsAdult = CalculateIsAdult();
+            WesternSign = CalculateWesternSign();
+            ChineseSign = CalculateChineseSign();
+            IsBirthday = CalculateIsBirthday();
+        }
+
         private bool CalculateIsAdult()
         {
-            var age = DateTime.Today.Year - BirthDate.Year;
-            if (BirthDate > DateTime.Today.AddYears(-age)) age--;
-            return age >= 18;
+            return Age >= 18;
         }
 
         private bool CalculateIsBirthday()
         {
             return BirthDate.Month == DateTime.Today.Month && BirthDate.Day == DateTime.Today.Day;
         }
-        private void Validate()
+        public void Validate()
         {
             if (!IsValidName(FirstName))
                 throw new ArgumentException("Invalid first name format (must be 2 to 50 characters).");
@@ -126,7 +222,21 @@ namespace WpfPersonInfo.Model
         {
             return Regex.IsMatch(email, @"^[^\s@]+@[^\s@]+\.[^\s@]+$");
         }
+
+        [JsonIgnore]
+        public bool IsValid =>
+            !string.IsNullOrWhiteSpace(FirstName) &&
+            !string.IsNullOrWhiteSpace(LastName) &&
+            !string.IsNullOrWhiteSpace(Email);
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
     }
+
     public class FutureBirthDateException : Exception
     {
         public FutureBirthDateException()

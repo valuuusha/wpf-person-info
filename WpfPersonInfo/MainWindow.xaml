@@ -5,67 +5,51 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:vm="clr-namespace:WpfPersonInfo.ViewModel"
         mc:Ignorable="d"
-        Title="MainWindow" Height="400" Width="400"
-        IsEnabled="{Binding ProceedEnabled}">
+        Title="User Management" Height="600" Width="800">
 
     <Window.DataContext>
         <vm:UserViewModel/>
     </Window.DataContext>
-    
-    <Grid>
+
+    <Grid Margin="10">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
-            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="*"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
-        <TextBlock Grid.Row="0" Grid.Column="0" VerticalAlignment="Top" Margin="5" Text="First name" FontSize="12" Foreground="Gray"></TextBlock>
-        <TextBox Name="TbFirstName" Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" Margin="5"
-         Text="{Binding FirstName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+            <TextBlock Text="Filter:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <TextBox Width="200" Margin="0,0,10,0" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}"/>
+            <TextBlock Text="Property:" VerticalAlignment="Center" Margin="0,0,5,0"/>
+            <ComboBox Width="150" ItemsSource="{Binding FilterProperties}" SelectedItem="{Binding SelectedFilterProperty}" />
+            <Button Content="Clear Filter" Margin="10,0,0,0" Command="{Binding ClearFilterCommand}" />
+        </StackPanel>
 
-        <TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Top" Margin="5" Text="Last name" FontSize="12" Foreground="Gray"></TextBlock>
-        <TextBox Name="TbLastName" Grid.Row="1" Grid.Column="1" VerticalAlignment="Top" Margin="5"
-         Text="{Binding LastName, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
+        <DataGrid Grid.Row="1"
+                  ItemsSource="{Binding Persons}"
+                  SelectedItem="{Binding SelectedPerson}"
+                  AutoGenerateColumns="False"
+                  CanUserSortColumns="True"
+                  IsReadOnly="True"
+                  Margin="0,0,0,10">
+            <DataGrid.Columns>
+                <DataGridTextColumn Header="First Name" Binding="{Binding FirstName}" Width="*" />
+                <DataGridTextColumn Header="Last Name" Binding="{Binding LastName}" Width="*" />
+                <DataGridTextColumn Header="Email" Binding="{Binding Email}" Width="*" />
+                <DataGridTextColumn Header="Birth Date" Binding="{Binding BirthDate, StringFormat='{}{0:dd.MM.yyyy}'}" Width="*" />
+                <DataGridTextColumn Header="Age" Binding="{Binding Age}" Width="*" />
+                <DataGridTextColumn Header="Is Adult" Binding="{Binding IsAdult}" Width="Auto" />
+                <DataGridTextColumn Header="Western Sign" Binding="{Binding WesternSign}" Width="*" />
+                <DataGridTextColumn Header="Chinese Sign" Binding="{Binding ChineseSign}" Width="*" />
+                <DataGridTextColumn Header="Is Birthday" Binding="{Binding IsBirthday}" Width="Auto" />
+            </DataGrid.Columns>
+        </DataGrid>
 
-        <TextBlock Grid.Row="2" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="5" Text="Email" FontSize="12" Foreground="Gray"></TextBlock>
-        <TextBox Name="TbEmail" Grid.Row="3" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="5"
-         Text="{Binding Email, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}" />
-
-        <TextBlock Grid.Row="4" Grid.ColumnSpan="2" VerticalAlignment="Top" Margin="5" Text="Birth date" FontSize="12" Foreground="Gray"></TextBlock>
-        <DatePicker Name="DpBirthDate" Grid.Row="5" Grid.ColumnSpan="2"
-                    SelectedDate="{Binding BirthDate, Mode=TwoWay, UpdateSourceTrigger=PropertyChanged}"
-                    VerticalAlignment="Top" Margin="5"/>
-        <Button Name="BProceed" Grid.Row="6" Grid.Column="0" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Height="25" Margin="5" Content="Proceed" Command="{Binding ProceedCommand}"></Button>
-        
-        <TextBlock Grid.Row="7" Grid.Column="0" Margin="5" Text="Age:"/>
-        <TextBlock Grid.Row="7" Grid.Column="1" Margin="5" Text="{Binding Age}"/>
-
-        <TextBlock Grid.Row="8" Grid.Column="0" Margin="5" Text="Adult:"/>
-        <TextBlock Grid.Row="8" Grid.Column="1" Margin="5" Text="{Binding IsAdult}"/>
-
-        <TextBlock Grid.Row="9" Grid.Column="0" Margin="5" Text="Western sign:"/>
-        <TextBlock Grid.Row="9" Grid.Column="1" Margin="5" Text="{Binding WesternSign}"/>
-
-        <TextBlock Grid.Row="10" Grid.Column="0" Margin="5" Text="Chinese sign:"/>
-        <TextBlock Grid.Row="10" Grid.Column="1" Margin="5" Text="{Binding ChineseSign}"/>
-
-        <TextBlock Grid.Row="11" Grid.Column="0" Margin="5" Text="Birthday today:"/>
-        <TextBlock Grid.Row="11" Grid.Column="1" Margin="5" Text="{Binding IsBirthday}"/>
-
+        <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" >
+            <Button Content="Add" Width="80" Margin="5,0" Command="{Binding AddUserCommand}" />
+            <Button Content="Edit" Width="80" Margin="5,0" Command="{Binding EditUserCommand}" />
+            <Button Content="Delete" Width="80" Margin="5,0" Command="{Binding DeleteUserCommand}" />
+        </StackPanel>
     </Grid>
 </Window>

@@ -1,218 +1,216 @@
 ﻿using System;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
-using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Input;
 using WpfPersonInfo.Command;
 using WpfPersonInfo.Model;
+using WpfPersonInfo.Service;
+using WpfPersonInfo.View;
 
 namespace WpfPersonInfo.ViewModel
 {
     public class UserViewModel : INotifyPropertyChanged
     {
-        private string _firstName;
-        private string _lastName;
-        private string _email;
-        private DateTime _birthDate = DateTime.Today;
+        private readonly UserService _userService;
+        private ObservableCollection<Person> _persons;
+        private Person _selectedPerson;
+        private string _filterText;
+        private string _selectedFilterProperty;
+        private ICollectionView _personsView;
 
-        private string _age;
-        private string _isAdult;
-        private string _westernSign;
-        private string _chineseSign;
-        private string _isBirthday;
-
-        private bool _proceedEnabled = true;
-        public bool ProceedEnabled
+        public ObservableCollection<Person> Persons
         {
-            get => _proceedEnabled;
+            get => _persons;
             set
             {
-                _proceedEnabled = value;
+                _persons = value;
                 OnPropertyChanged();
-                UpdateCommandState(); 
+                SetupCollectionView();
             }
         }
 
-
-        public DateTime BirthDate
+        public Person SelectedPerson
         {
-            get => _birthDate;
+            get => _selectedPerson;
             set
             {
-                if (_birthDate != value)
-                {
-                    _birthDate = value;
-                    OnPropertyChanged();
-                    UpdateCommandState();
-                }
+                _selectedPerson = value;
+                OnPropertyChanged();
+                ((RelayCommand)EditUserCommand).RaiseCanExecuteChanged();
+                ((RelayCommand)DeleteUserCommand).RaiseCanExecuteChanged();
             }
         }
 
-        public string FirstName
+        public string FilterText
         {
-            get => _firstName;
+            get => _filterText;
             set
             {
-                if (_firstName != value)
-                {
-                    _firstName = value;
-                    OnPropertyChanged();
-                    UpdateCommandState();
-                }
+                _filterText = value;
+                OnPropertyChanged();
+                _personsView?.Refresh();
             }
         }
 
-        public string LastName
+        public string[] FilterProperties { get; } = {
+            "FirstName", "LastName", "Email", "BirthDate", "Age", "IsAdult", "WesternSign", "ChineseSign", "IsBirthday"
+        };
+
+        public string SelectedFilterProperty
         {
-            get => _lastName;
+            get => _selectedFilterProperty;
             set
             {
-                if (_lastName != value)
-                {
-                    _lastName = value;
-                    OnPropertyChanged();
-                    UpdateCommandState();
-                }
-            }
-        }
-
-        public string Email
-        {
-            get => _email;
-            set
-            {
-                if (_email != value)
-                {
-                    _email = value;
-                    OnPropertyChanged();
-                    UpdateCommandState();
-                }
-            }
-        }
-
-        public string Age
-        {
-            get => _age;
-            private set
-            {
-                _age = value;
+                _selectedFilterProperty = value;
                 OnPropertyChanged();
+                _personsView?.Refresh();
             }
         }
 
-        public string IsAdult
-        {
-            get => _isAdult;
-            private set
-            {
-                _isAdult = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string WesternSign
-        {
-            get => _westernSign;
-            private set
-            {
-                _westernSign = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string ChineseSign
-        {
-            get => _chineseSign;
-            private set
-            {
-                _chineseSign = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public string IsBirthday
-        {
-            get => _isBirthday;
-            private set
-            {
-                _isBirthday = value;
-                OnPropertyChanged();
-            }
-        }
-
-        public ICommand ProceedCommand { get; }
+        public ICommand AddUserCommand { get; }
+        public ICommand EditUserCommand { get; }
+        public ICommand DeleteUserCommand { get; }
+        public ICommand ClearFilterCommand { get; }
 
         public UserViewModel()
         {
-            ProceedCommand = new RelayCommand(async () => await OnProceedAsync(), CanProceed);
+            _userService = new UserService();
+            _selectedFilterProperty = FilterProperties[0];
+
+            AddUserCommand = new RelayCommand(AddUser);
+            EditUserCommand = new RelayCommand(EditUser, () => SelectedPerson != null);
+            DeleteUserCommand = new RelayCommand(DeleteUser, () => SelectedPerson != null);
+            ClearFilterCommand = new RelayCommand(ClearFilter);
+
+            LoadData();
         }
 
-        private bool CanProceed()
+        private async void LoadData()
         {
-            return !string.IsNullOrWhiteSpace(FirstName)
-                && !string.IsNullOrWhiteSpace(LastName)
-                && !string.IsNullOrWhiteSpace(Email)
-                && BirthDate != default;
-        }
-        private async Task OnProceedAsync()
-        {
-            ProceedEnabled = false;
-
             try
             {
-                await Task.Delay(1000);
-                await Task.Run(() =>
+                Persons = await _userService.LoadUsersAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error: {ex.Message}");
+            }
+        }
+
+        private void SetupCollectionView()
+        {
+            _personsView = CollectionViewSource.GetDefaultView(Persons);
+            _personsView.Filter = PersonFilter;
+        }
+
+        private bool PersonFilter(object item)
+        {
+            if (string.IsNullOrEmpty(FilterText))
+                return true;
+
+            var person = item as Person;
+            if (person == null)
+                return false;
+
+            switch (SelectedFilterProperty)
+            {
+                case "FirstName":
+                    return person.FirstName.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "LastName":
+                    return person.LastName.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "Email":
+                    return person.Email.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "BirthDate":
+                    return person.BirthDate.ToString("dd.MM.yyyy").Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "Age":
+                    return person.Age.ToString().Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "IsAdult":
+                    return person.IsAdult.ToString().Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "WesternSign":
+                    return person.WesternSign.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "ChineseSign":
+                    return person.ChineseSign.Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                case "IsBirthday":
+                    return person.IsBirthday.ToString().Contains(FilterText, StringComparison.OrdinalIgnoreCase);
+                default:
+                    return true;
+            }
+        }
+
+        private async void AddUser()
+        {
+            var window = new UserEditWindow();
+            var viewModel = new UserEditViewModel(window);
+            window.DataContext = viewModel;
+            window.Owner = Application.Current.MainWindow;
+
+            bool? result = window.ShowDialog();
+
+            if (result == true)
+            {
+                Persons.Add(viewModel.ResultPerson);
+                await _userService.SaveUsersAsync(Persons);
+            }
+        }
+
+        private async void EditUser()
+        {
+            if (SelectedPerson == null)
+                return;
+
+            var window = new UserEditWindow();
+            var viewModel = new UserEditViewModel(window, SelectedPerson, true);
+            window.DataContext = viewModel;
+            window.Owner = Application.Current.MainWindow;
+
+            bool? result = window.ShowDialog();
+
+            if (result == true)
+            {
+                int index = Persons.IndexOf(SelectedPerson);
+                if (index >= 0)
                 {
-                    try
-                    {
-                        var person = new Person(FirstName, LastName, Email, BirthDate);
-
-                        Age = CalculateAge(BirthDate).ToString();
-                        IsAdult = person.IsAdult ? "Yes" : "No";
-                        WesternSign = person.WesternSign;
-                        ChineseSign = person.ChineseSign;
-                        IsBirthday = person.IsBirthday ? "Yes" : "No";
-
-                        if (person.IsBirthday)
-                        {
-                            MessageBox.Show("Happy Birthday!", "Congratulations", MessageBoxButton.OK, MessageBoxImage.Information);
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        MessageBox.Show(ex.Message, "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
-                    }
-                });
-            }
-            finally
-            {
-                ProceedEnabled = true;
+                    Persons[index] = viewModel.ResultPerson;
+                    await _userService.SaveUsersAsync(Persons);
+                    _personsView.Refresh();
+                }
             }
         }
 
 
-        private int CalculateAge(DateTime birthDate)
+        private async void DeleteUser()
         {
-            var today = DateTime.Today;
-            int age = today.Year - birthDate.Year;
-            if (birthDate.Date > today.AddYears(-age)) age--;
-            return age;
-        }
+            if (SelectedPerson == null)
+                return;
 
-        private void UpdateCommandState()
-        {
-            if (ProceedCommand is RelayCommand relayCommand)
+            var result = MessageBox.Show(
+                $"Are you sure you want to delete {SelectedPerson.FirstName} {SelectedPerson.LastName}?",
+                "Confirm Delete",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Question);
+
+            if (result == MessageBoxResult.Yes)
             {
-                relayCommand.RaiseCanExecuteChanged();
+                Persons.Remove(SelectedPerson);
+                await _userService.SaveUsersAsync(Persons);
             }
         }
 
-        public event PropertyChangedEventHandler? PropertyChanged;
-        protected void OnPropertyChanged([CallerMemberName] string propertyName = "")
+        private void ClearFilter()
+        {
+            FilterText = string.Empty;
+        }
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
+
     }
 }
