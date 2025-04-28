@@ -11,11 +11,18 @@ namespace WpfPersonInfo.Service
 {
     public class UserService
     {
-        private static readonly string _dataFilePath = Path.Combine(
-            AppDomain.CurrentDomain.BaseDirectory, "users.json");
+        private static readonly string BaseFolder = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "ZodiacApp");
+
+        private static readonly string _dataFilePath = Path.Combine(BaseFolder, "users.json");
 
         public async Task<ObservableCollection<Person>> LoadUsersAsync()
         {
+            if (!Directory.Exists(BaseFolder))
+            {
+                Directory.CreateDirectory(BaseFolder);
+            }
+
             if (!File.Exists(_dataFilePath))
             {
                 var users = GenerateUsers();
@@ -42,6 +49,11 @@ namespace WpfPersonInfo.Service
         {
             try
             {
+                if (!Directory.Exists(BaseFolder))
+                {
+                    Directory.CreateDirectory(BaseFolder);
+                }
+
                 await using var fileStream = File.Create(_dataFilePath);
                 await JsonSerializer.SerializeAsync(fileStream, users.ToList(),
                     new JsonSerializerOptions { WriteIndented = true });
