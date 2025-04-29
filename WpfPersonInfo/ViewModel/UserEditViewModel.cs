@@ -124,26 +124,7 @@ namespace WpfPersonInfo.ViewModel
         {
             try
             {
-                if (BirthDate > DateTime.Today)
-                {
-                    MessageBox.Show("Birth date cannot be in the future.", "Validation Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (BirthDate < DateTime.Today.AddYears(-135))
-                {
-                    MessageBox.Show("Birth date is outside valid range for living persons.", "Validation Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
-
-                if (!Person.IsValidEmail(Email))
-                {
-                    MessageBox.Show("Invalid email format.", "Validation Error",
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                _person.Validate();
 
                 RequestClose?.Invoke(this, true);
             }
