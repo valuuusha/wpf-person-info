@@ -8,6 +8,7 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
+using WpfPersonInfo.Service;
 using WpfPersonInfo.ViewModel;
 
 namespace WpfPersonInfo
@@ -17,6 +18,11 @@ namespace WpfPersonInfo
         public MainWindow()
         {
             InitializeComponent();
+
+            var userService = new UserService();
+            var dialogService = new DialogService();
+            DataContext = new UserViewModel(userService, dialogService);
         }
     }
+
 }

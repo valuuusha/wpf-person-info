@@ -16,6 +16,7 @@ namespace WpfPersonInfo.ViewModel
     public class UserViewModel : INotifyPropertyChanged
     {
         private readonly UserService _userService;
+        private readonly IDialogService _dialogService;
         private ObservableCollection<Person> _persons;
         private Person _selectedPerson;
         private string _filterText;
@@ -76,9 +77,10 @@ namespace WpfPersonInfo.ViewModel
         public ICommand DeleteUserCommand { get; }
         public ICommand ClearFilterCommand { get; }
 
-        public UserViewModel()
+        public UserViewModel(UserService userService,IDialogService dialogService)
         {
-            _userService = new UserService();
+            _userService = userService;
+            _dialogService = dialogService;
             _selectedFilterProperty = FilterProperties[0];
 
             AddUserCommand = new RelayCommand(AddUser);
@@ -88,6 +90,7 @@ namespace WpfPersonInfo.ViewModel
 
             LoadData();
         }
+
 
         private async void LoadData()
         {
@@ -143,12 +146,8 @@ namespace WpfPersonInfo.ViewModel
 
         private async void AddUser()
         {
-            var window = new UserEditWindow();
-            var viewModel = new UserEditViewModel(window);
-            window.DataContext = viewModel;
-            window.Owner = Application.Current.MainWindow;
-
-            bool? result = window.ShowDialog();
+            var viewModel = new UserEditViewModel();
+            bool? result = _dialogService.ShowEditDialog(viewModel);
 
             if (result == true)
             {
@@ -162,12 +161,8 @@ namespace WpfPersonInfo.ViewModel
             if (SelectedPerson == null)
                 return;
 
-            var window = new UserEditWindow();
-            var viewModel = new UserEditViewModel(window, SelectedPerson, true);
-            window.DataContext = viewModel;
-            window.Owner = Application.Current.MainWindow;
-
-            bool? result = window.ShowDialog();
+            var viewModel = new UserEditViewModel(SelectedPerson, true);
+            bool? result = _dialogService.ShowEditDialog(viewModel);
 
             if (result == true)
             {
@@ -180,6 +175,7 @@ namespace WpfPersonInfo.ViewModel
                 }
             }
         }
+
 
 
         private async void DeleteUser()

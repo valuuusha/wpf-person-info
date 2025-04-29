@@ -10,11 +10,11 @@ namespace WpfPersonInfo.ViewModel
 {
     public class UserEditViewModel : INotifyPropertyChanged
     {
-        private readonly Window _window;
         private Person _person;
         private string _windowTitle;
         private bool _isNewUser;
 
+        public event EventHandler<bool?> RequestClose;
         public Person ResultPerson => _person;
 
         public string FirstName
@@ -81,9 +81,8 @@ namespace WpfPersonInfo.ViewModel
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
 
-        public UserEditViewModel(Window window)
+        public UserEditViewModel()
         {
-            _window = window;
             _person = new Person();
             _isNewUser = true;
             WindowTitle = "Add New User";
@@ -92,10 +91,8 @@ namespace WpfPersonInfo.ViewModel
             CancelCommand = new RelayCommand(Cancel);
         }
 
-        public UserEditViewModel(Window window, Person person, bool createCopy = true)
+        public UserEditViewModel(Person person, bool createCopy = true)
         {
-            _window = window;
-
             if (createCopy)
             {
                 _person = new Person(
@@ -148,8 +145,7 @@ namespace WpfPersonInfo.ViewModel
                     return;
                 }
 
-                _window.DialogResult = true;
-                _window.Close();
+                RequestClose?.Invoke(this, true);
             }
             catch (Exception ex)
             {
@@ -160,8 +156,7 @@ namespace WpfPersonInfo.ViewModel
 
         private void Cancel()
         {
-            _window.DialogResult = false;
-            _window.Close();
+            RequestClose?.Invoke(this, false);
         }
 
         public event PropertyChangedEventHandler PropertyChanged;
