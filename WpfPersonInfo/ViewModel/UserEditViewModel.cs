@@ -13,6 +13,7 @@ namespace WpfPersonInfo.ViewModel
         private Person _person;
         private string _windowTitle;
         private bool _isNewUser;
+        private bool _isSaving;
 
         public event EventHandler<bool?> RequestClose;
         public Person ResultPerson => _person;
@@ -77,6 +78,16 @@ namespace WpfPersonInfo.ViewModel
                 OnPropertyChanged();
             }
         }
+        public bool IsSaving
+        {
+            get => _isSaving;
+            set
+            {
+                _isSaving = value;
+                OnPropertyChanged();
+                ((RelayCommand)SaveCommand).RaiseCanExecuteChanged();
+            }
+        }
 
         public ICommand SaveCommand { get; }
         public ICommand CancelCommand { get; }
@@ -87,7 +98,7 @@ namespace WpfPersonInfo.ViewModel
             _isNewUser = true;
             WindowTitle = "Add New User";
 
-            SaveCommand = new RelayCommand(Save, CanSave);
+            SaveCommand = new RelayCommand(async () => await SaveAsync(), CanSave);
             CancelCommand = new RelayCommand(Cancel);
         }
 
@@ -109,22 +120,25 @@ namespace WpfPersonInfo.ViewModel
             _isNewUser = false;
             WindowTitle = "Edit User";
 
-            SaveCommand = new RelayCommand(Save, CanSave);
+            SaveCommand = new RelayCommand(async () => await SaveAsync(), CanSave);
             CancelCommand = new RelayCommand(Cancel);
         }
 
         private bool CanSave()
         {
-            return !string.IsNullOrWhiteSpace(FirstName) &&
+            return !IsSaving &&
+                   !string.IsNullOrWhiteSpace(FirstName) &&
                    !string.IsNullOrWhiteSpace(LastName) &&
                    !string.IsNullOrWhiteSpace(Email);
-        }
+        }   
 
-        private void Save()
+        private async Task SaveAsync()
         {
+            IsSaving = true;
+
             try
             {
-                _person.Validate();
+                await Task.Run(() => _person.Validate());
 
                 RequestClose?.Invoke(this, true);
             }
@@ -132,6 +146,10 @@ namespace WpfPersonInfo.ViewModel
             {
                 MessageBox.Show($"Error saving user: {ex.Message}", "Error",
                     MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+            finally
+            {
+                IsSaving = false;
             }
         }
 

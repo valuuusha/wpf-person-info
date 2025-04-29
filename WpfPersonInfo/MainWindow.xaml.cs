@@ -1,13 +1,4 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
 using WpfPersonInfo.Service;
 using WpfPersonInfo.ViewModel;
 
@@ -18,11 +9,16 @@ namespace WpfPersonInfo
         public MainWindow()
         {
             InitializeComponent();
+            Loaded += MainWindow_Loaded;
+        }
 
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
             var userService = new UserService();
             var dialogService = new DialogService();
-            DataContext = new UserViewModel(userService, dialogService);
+            var viewModel = new UserViewModel(userService, dialogService);
+            DataContext = viewModel;
+            await viewModel.InitializeAsync();
         }
     }
-
 }

@@ -77,30 +77,31 @@ namespace WpfPersonInfo.ViewModel
         public ICommand DeleteUserCommand { get; }
         public ICommand ClearFilterCommand { get; }
 
-        public UserViewModel(UserService userService,IDialogService dialogService)
+        public UserViewModel(UserService userService, IDialogService dialogService)
         {
             _userService = userService;
             _dialogService = dialogService;
             _selectedFilterProperty = FilterProperties[0];
+            _persons = new ObservableCollection<Person>();
 
-            AddUserCommand = new RelayCommand(AddUser);
-            EditUserCommand = new RelayCommand(EditUser, () => SelectedPerson != null);
-            DeleteUserCommand = new RelayCommand(DeleteUser, () => SelectedPerson != null);
+            AddUserCommand = new RelayCommand(() => { _ = AddUser(); });
+            EditUserCommand = new RelayCommand(() => { _ = EditUser(); }, () => SelectedPerson != null);
+            DeleteUserCommand = new RelayCommand(() => { _ = DeleteUser(); }, () => SelectedPerson != null);
             ClearFilterCommand = new RelayCommand(ClearFilter);
 
-            LoadData();
+            SetupCollectionView();
         }
 
-
-        private async void LoadData()
+        public async Task InitializeAsync()
         {
             try
             {
-                Persons = await _userService.LoadUsersAsync();
+                var users = await _userService.LoadUsersAsync();
+                Persons = new ObservableCollection<Person>(users);
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Error: {ex.Message}");
+                _dialogService.ShowError($"Error loading users: {ex.Message}");
             }
         }
 
@@ -144,7 +145,7 @@ namespace WpfPersonInfo.ViewModel
             }
         }
 
-        private async void AddUser()
+        private async Task AddUser()
         {
             var viewModel = new UserEditViewModel();
             bool? result = _dialogService.ShowEditDialog(viewModel);
@@ -156,7 +157,7 @@ namespace WpfPersonInfo.ViewModel
             }
         }
 
-        private async void EditUser()
+        private async Task EditUser()
         {
             if (SelectedPerson == null)
                 return;
@@ -176,20 +177,16 @@ namespace WpfPersonInfo.ViewModel
             }
         }
 
-
-
-        private async void DeleteUser()
+        private async Task DeleteUser()
         {
             if (SelectedPerson == null)
                 return;
 
-            var result = MessageBox.Show(
+            var result = _dialogService.ShowConfirmation(
                 $"Are you sure you want to delete {SelectedPerson.FirstName} {SelectedPerson.LastName}?",
-                "Confirm Delete",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Question);
+                "Confirm Delete");
 
-            if (result == MessageBoxResult.Yes)
+            if (result == true)
             {
                 Persons.Remove(SelectedPerson);
                 await _userService.SaveUsersAsync(Persons);

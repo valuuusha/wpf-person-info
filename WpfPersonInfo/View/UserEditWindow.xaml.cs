@@ -11,6 +11,7 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using WpfPersonInfo.ViewModel;
 
 namespace WpfPersonInfo.View
 {
@@ -19,9 +20,17 @@ namespace WpfPersonInfo.View
     /// </summary>
     public partial class UserEditWindow : Window
     {
-        public UserEditWindow()
+        public UserEditWindow(UserEditViewModel viewModel)
         {
             InitializeComponent();
+            DataContext = viewModel;
+
+            viewModel.RequestClose += (s, result) =>
+            {
+                DialogResult = result;
+                Close();
+            };
         }
     }
 }
+
